@@ -2,12 +2,19 @@ import pandas as pd
 import numpy as np
 import math
 import matplotlib.pyplot as plt
+import forecast_manipulation
+from datetime import date
+import datetime
 
-main_dir = '../../iRONS/iRONS/Notebooks/B - Implementation/Inputs/'
+main_dir = '../iRONS/iRONS/Notebooks/B - Implementation/Inputs/'
 
 # Read data from iRONS
 hist_all = pd.read_csv(main_dir + 'hist_clim_data.csv', index_col=0)
+print(hist_all.iloc[5])
+print(hist_all.loc['06/01/1980'])
 hist_all.index = pd.to_datetime(np.array(hist_all.index), format = '%d/%m/%Y')
+print(hist_all.iloc[5])
+print(hist_all.loc[datetime.datetime(1980, 6, 1)])
 
 # Read forecast data
 variable_name = 'Temp'
@@ -19,7 +26,7 @@ hist_data = pd.Series(hist_all.loc[fore_data.index][variable_name])
 # hist_data = hist_data.cumsum()
 
 # Get average forecast (non bias corrected)
-fore_avg = pd.Series(data=fore_data.mean(axis=1), index=fore_data.index, name='Forecast ' + variable_name + ': average')
+fore_avg = forecast_manipulation.ensemble_average(fore_data, variable_name)
 
 # Compute errors
 det_error = hist_data-fore_avg
@@ -27,21 +34,12 @@ det_error.name = 'Deterministic error for ' + variable_name
 ens_error = -fore_data.sub(hist_data.values, axis=0)
 ens_error.name = 'Ensemble error for ' + variable_name
 
-# Change the ensembles
-def deterministic_improve(data, forecast, k):
-    return (1-k)*data + k*forecast
-def ensemble_improve(data, forecast, k):
-    new_ensemble = pd.DataFrame(data=None, index=forecast.index)
-    for i in range(forecast.shape[1]):
-        new_ensemble.insert(i, column=forecast.columns[i], value=(1-k)*hist_data.values+k*forecast.values[:,i])
-    return new_ensemble
-
 # Get forecast family (by 0.25), MAE, and PLOT
 mae_family = pd.DataFrame(data=None, index=fore_avg.index)
 for i in range(5):
     S = float(i)/4
     k = 1 - S
-    mae_family.insert(i, column=str(S), value=deterministic_improve(hist_data, fore_avg, k).values)
+    mae_family.insert(i, column=str(S), value=forecast_manipulation.deterministic_improve(hist_data, fore_avg, k).values)
 fig = plt.figure(figsize=(10,6))
 ax = fig.add_subplot(1,1,1)
 ax.plot(hist_data,c='blue', linewidth=2, label='Historical data')
@@ -66,7 +64,7 @@ mse_family = pd.DataFrame(data=None, index=fore_avg.index)
 for i in range(5):
     S = float(i)/4
     k = math.sqrt(1 - S)
-    mse_family.insert(i, column=str(S), value=deterministic_improve(hist_data, fore_avg, k).values)
+    mse_family.insert(i, column=str(S), value=forecast_manipulation.deterministic_improve(hist_data, fore_avg, k).values)
 fig = plt.figure(figsize=(10,6))
 ax = fig.add_subplot(1,1,1)
 ax.plot(hist_data,c='blue', linewidth=2, label='Historical data')
@@ -88,7 +86,7 @@ fig.clf()
 crps_family = pd.DataFrame(data=None, index=fore_avg.index)
 S = 0.5
 k = 1 - S
-crps_family = ensemble_improve(hist_data, fore_data, k)
+crps_family = forecast_manipulation.ensemble_improve(hist_data, fore_data, k)
 fig = plt.figure(figsize=(16,6))
 ax = fig.add_subplot(1,1,1)
 handles = []
