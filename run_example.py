@@ -3,18 +3,13 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 import forecast_manipulation
-from datetime import date
 import datetime
 
-main_dir = '../iRONS/iRONS/Notebooks/B - Implementation/Inputs/'
+main_dir = '../../iRONS/iRONS/Notebooks/B - Implementation/Inputs/'
 
 # Read data from iRONS
 hist_all = pd.read_csv(main_dir + 'hist_clim_data.csv', index_col=0)
-print(hist_all.iloc[5])
-print(hist_all.loc['06/01/1980'])
 hist_all.index = pd.to_datetime(np.array(hist_all.index), format = '%d/%m/%Y')
-print(hist_all.iloc[5])
-print(hist_all.loc[datetime.datetime(1980, 6, 1)])
 
 # Read forecast data
 variable_name = 'Temp'
@@ -40,6 +35,7 @@ for i in range(5):
     S = float(i)/4
     k = 1 - S
     mae_family.insert(i, column=str(S), value=forecast_manipulation.deterministic_improve(hist_data, fore_avg, k).values)
+print(mae_family)
 fig = plt.figure(figsize=(10,6))
 ax = fig.add_subplot(1,1,1)
 ax.plot(hist_data,c='blue', linewidth=2, label='Historical data')
