@@ -1,7 +1,5 @@
-from deterministic import deterministic_family
-from ensemble import ensemble_family
+from src.ensemble import ensemble_family
 import numpy as np
-import pandas as pd
 
 main_dir = '../../iRONS/iRONS/Notebooks/B - Implementation/Inputs/'
 datafile = main_dir + 'hist_clim_data.csv'
