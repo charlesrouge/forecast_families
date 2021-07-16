@@ -10,6 +10,10 @@ sys.path.append('.')
 from src.deterministic import deterministic_family
 from src.ensemble import ensemble_family
 
+"""
+Test with pytest from main directory: enter in command line `pytest test/test/workflow.py`
+"""
+
 
 def test_workflow():
 
@@ -84,7 +88,35 @@ def test_workflow():
     family_to_test = pd.read_csv(family_dir + '19690101_1d_7m_ECMWF_Rain_MSE_Family.csv', index_col=0)
     deterministic_family_testing(family_to_test, cumulative_rain, rain_fore_avg)
 
-    
+    # Test CRPSS, skill = 0
+    family_to_test = pd.read_csv(family_dir + 'ECMWF_Ensemble_Skill_CRPSS=0.0/19690101_1d_7m_ECMWF_Temp.csv',
+                                 index_col=0)
+    np.testing.assert_array_almost_equal(family_to_test.values, temp_forecast.values, decimal=6)
+    family_to_test = pd.read_csv(family_dir + 'ECMWF_Ensemble_Skill_CRPSS=0.0/19690101_1d_7m_ECMWF_Rain.csv',
+                                 index_col=0)
+    np.testing.assert_array_almost_equal(family_to_test.values, rain_forecast.values, decimal=6)
+
+    # Test CRPSS, skill = 0.5
+    family_to_test = pd.read_csv(family_dir + 'ECMWF_Ensemble_Skill_CRPSS=0.5/19690101_1d_7m_ECMWF_Temp.csv',
+                                 index_col=0)
+    for i in range(family_to_test.shape[1]):
+        np.testing.assert_array_almost_equal(family_to_test.values[:, i], (hist_data['Temp'].values[1:4] +
+                                                                           temp_forecast.values[:, i]) / 2, decimal=6)
+    family_to_test = pd.read_csv(family_dir + 'ECMWF_Ensemble_Skill_CRPSS=0.5/19690101_1d_7m_ECMWF_Rain.csv',
+                                 index_col=0)
+    for i in range(family_to_test.shape[1]):
+        np.testing.assert_array_almost_equal(family_to_test.values[:, i], (cumulative_rain +
+                                                                           rain_forecast.values[:, i]) / 2, decimal=6)
+
+    # Test CRPSS, skill = 1
+    family_to_test = pd.read_csv(family_dir + 'ECMWF_Ensemble_Skill_CRPSS=1.0/19690101_1d_7m_ECMWF_Temp.csv',
+                                 index_col=0)
+    for i in range(family_to_test.shape[1]):
+        np.testing.assert_array_almost_equal(family_to_test.values[:, i], hist_data['Temp'].values[1:4], decimal=6)
+    family_to_test = pd.read_csv(family_dir + 'ECMWF_Ensemble_Skill_CRPSS=1.0/19690101_1d_7m_ECMWF_Rain.csv',
+                                 index_col=0)
+    for i in range(family_to_test.shape[1]):
+        np.testing.assert_array_almost_equal(family_to_test.values[:, i], cumulative_rain, decimal=6)
 
     # Cleanup (optional)
     shutil.rmtree('workflow_data')
