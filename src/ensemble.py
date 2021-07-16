@@ -57,7 +57,7 @@ def ensemble_family(hist_file, forecast_folder, variable_names, family_folder, s
                 family_member.insert(j, column=fore_data.columns[j],
                                      value=(1 - k) * hist_data.values + k * fore_data.values[:, j])
 
-            skill_folder = family_folder + '/ECMWF_Ensemble_skill_CRPSS=' + str(skill_values[i])
+            skill_folder = family_folder + '/ECMWF_Ensemble_skill_CRPSS=' + str("%.2f" % skill_values[i])
             if os.path.exists(skill_folder) is False:
                 os.mkdir(skill_folder)
 
