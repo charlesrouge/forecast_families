@@ -40,7 +40,7 @@ def test_workflow():
                               'Rain': [2.0, 2.0, 2.0, 2.0, 2.0]})
     hist_data = hist_data.set_index('Date')
     hist_data.to_csv(path_or_buf=datafile)
-    cumulative_rain =[2.0, 4.0, 6.0]
+    cumulative_rain = [2.0, 4.0, 6.0]
 
     # temperature forecast
     temp_forecast = pd.DataFrame({'Date': ['1/1/1969', '2/1/1969', '3/1/1969'],
@@ -122,6 +122,7 @@ def test_workflow():
     shutil.rmtree('workflow_data')
 
     return None
+
 
 def deterministic_family_testing(family, data_nparray, forecast):
     np.testing.assert_array_almost_equal(family.values[:, 0], forecast.values, decimal=6)
