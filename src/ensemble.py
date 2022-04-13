@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import os
+import matplotlib.pyplot as plt
 
 
 def ensemble_family(hist_file, forecast_folder, variable_names, family_folder, skill_values, begin_date, end_date):
@@ -63,5 +64,18 @@ def ensemble_family(hist_file, forecast_folder, variable_names, family_folder, s
 
             family_member.to_csv(path_or_buf=skill_folder + '/' + str(10000*t.year + 100*t.month + t.day) +
                                  '_1d_7m_ECMWF_' + variable_names[1] + '.csv')
+
+    return None
+
+
+def plot_ensemble(hist_file, variable_names, family_folder, skill_values, date):
+
+    # Read historical data
+    hist_all = pd.read_csv(hist_file, index_col=0)
+    hist_all.index = pd.to_datetime(np.array(hist_all.index), format='%d/%m/%Y')
+
+    num_fig = len(skill_values)
+
+    fig,ax = plt.subplots(ncols=num_fig, nrows=1, figsize=(6*num_fig, 6))
 
     return None

@@ -1,5 +1,5 @@
 from src.deterministic import deterministic_family
-from src.ensemble import ensemble_family
+from src.ensemble import ensemble_family, plot_ensemble
 import numpy as np
 import os
 
@@ -24,12 +24,15 @@ if os.path.exists(family_destination) is False:
     os.mkdir(family_destination)
 if os.path.exists(family_destination + 'deterministic/') is False:
     os.mkdir(family_destination + 'deterministic/')
-skill_values = np.linspace(0, 1, 11)
-beg_date = '1981/1/1'
-end_date = '2015/05/01'
+skill_values = np.linspace(0, 1, 6)
+beg_date = '2011/09/1'
+end_date = '2012/08/01'
 
 # Ensembles (skill: CRPSS)
 ensemble_family(datafile, forecast_folder, var_name, family_destination, skill_values, beg_date, end_date)
+
+# Example plotting for ensembles
+
 
 # MAE (deterministic)
 deterministic_family(datafile, forecast_folder, var_name, family_destination + '/deterministic/', skill_values,
