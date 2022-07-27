@@ -15,8 +15,8 @@ In the deterministic implementation, families are put in the same file instead, 
 identical to the ensemble implementation.
 """
 
-# main_dir = 'data/'
-main_dir = '../../iRONS/iRONS/Notebooks/B - Implementation/Inputs/'
+main_dir = 'data/'
+# main_dir = '../../iRONS/iRONS/Notebooks/B - Implementation/Inputs/'
 datafile = main_dir + 'hist_clim_data.csv'
 forecast_folder = main_dir + 'ECMWF forecasts csv/'
 var_name = ['PET', 'Evap']

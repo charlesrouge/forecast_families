@@ -15,8 +15,8 @@ def generate_family(observations, forecast_ensemble, skill_values, family_folder
         # Member of the forecast family for this skill level
         family_member = pd.DataFrame(data=None, index=forecast_ensemble.index)
         for j in range(forecast_ensemble.shape[1]):
-                family_member.insert(j, column=forecast_ensemble.columns[j],
-                                     value=(1 - k) * observations.values + k * forecast_ensemble.values[:, j])
+            family_member.insert(j, column=forecast_ensemble.columns[j],
+                                 value=(1 - k) * observations.values + k * forecast_ensemble.values[:, j])
 
         if different_folders is True:
             skill_folder = family_folder + str("%.2f" % skill_values[i])
@@ -27,12 +27,12 @@ def generate_family(observations, forecast_ensemble, skill_values, family_folder
             if os.path.exists(family_folder) is False:
                 os.mkdir(family_folder)
             family_member.to_csv(path_or_buf=family_folder + '/' + output_filename + '_' +
-                                 str("%02d" % int(10*skill_values[i])) + '.csv')
+                                 str("%03d" % int(100*skill_values[i])) + '.csv')
 
     return None
 
 
-def plot_ensemble_family(hist_file, forecast_path, var_names, destination):
+def plot_ensemble_family(hist_file, forecast_path, family_path, var_names, destination):
 
     """
     This function plots the difference between observations and  forecast ensemble for different values of the skill,
@@ -47,7 +47,7 @@ def plot_ensemble_family(hist_file, forecast_path, var_names, destination):
     """
 
     # Read original forecast (which is also the zero-skill family member)
-    benchmark_forecast = pd.read_csv(forecast_path + str(0) + '.csv', index_col=0)
+    benchmark_forecast = pd.read_csv(forecast_path + '.csv', index_col=0)
     benchmark_forecast.index = pd.to_datetime(np.array(benchmark_forecast.index), format='%Y/%m/%d')
     benchmark_stats = pd.DataFrame({'min': benchmark_forecast.min(axis=1),
                                     'mean': benchmark_forecast.mean(axis=1),
@@ -85,7 +85,7 @@ def plot_ensemble_family(hist_file, forecast_path, var_names, destination):
         if i == 10:
             modified_forecast = hist_data
         else:
-            modified_forecast = pd.read_csv(forecast_path + str(i) + '.csv', index_col=0)
+            modified_forecast = pd.read_csv(family_path + str(i) + '.csv', index_col=0)
             modified_forecast.index = pd.to_datetime(np.array(benchmark_forecast.index), format='%Y/%m/%d')
 
         # Plot current forecast vs. observed data
