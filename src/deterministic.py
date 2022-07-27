@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import os
 
 
-def deterministic_family(hindcast_data, fore_det, skill_values, skill_name):
+def generate_family(observations, fore_det, skill_values, skill_name):
 
     # Define forecast family
     family = pd.DataFrame(data=None, index=fore_det.index)
@@ -23,7 +23,7 @@ def deterministic_family(hindcast_data, fore_det, skill_values, skill_name):
         else:
             raise ValueError("input variable 'mase' must be a string with values 'MAE' or 'MSE'")
 
-        family.insert(i, column='S=' + str(skill), value=(1 - k) * hindcast_data.values + k * fore_det.values)
+        family.insert(i, column='S=' + str(skill), value=(1 - k) * observations.values + k * fore_det.values)
 
     return family
 
@@ -64,7 +64,7 @@ def plot_det_family(history_file, benchmark_path, var_names, skill_name, skill_s
     print(skill_specs['value'].values)
 
     # Compute the forecast family
-    family = deterministic_family(hist_data, benchmark_forecast, skill_specs.loc[:, 'value'], skill_name)
+    family = generate_family(hist_data, benchmark_forecast, skill_specs.loc[:, 'value'], skill_name)
 
     # Rename the columns
     family.columns = skill_specs.loc[:, 'stringvalue']
@@ -164,7 +164,7 @@ def ecmwf_deterministic_family(history_file, forecast_folder, variable_names, fa
             hist_data = hist_data.cumsum()
 
         # Generate the desired deterministic forecast family
-        family = deterministic_family(hist_data, deterministic_forecast, skill_val, mase)
+        family = generate_family(hist_data, deterministic_forecast, skill_val, mase)
 
         # Save family to CSV
         family.to_csv(path_or_buf=family_folder + '/' + str(10000*t.year + 100*t.month + t.day) + '_1d_7m_ECMWF_' +

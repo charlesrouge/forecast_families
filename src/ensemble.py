@@ -4,6 +4,120 @@ import os
 import matplotlib.pyplot as plt
 
 
+def generate_family(observations, forecast_ensemble, skill_values, family_folder, different_folders, output_filename):
+
+    # Loop on skill values
+    for i in range(len(skill_values)):
+
+        # Compute multiplier k
+        k = 1 - skill_values[i]
+
+        # Member of the forecast family for this skill level
+        family_member = pd.DataFrame(data=None, index=forecast_ensemble.index)
+        for j in range(forecast_ensemble.shape[1]):
+                family_member.insert(j, column=forecast_ensemble.columns[j],
+                                     value=(1 - k) * observations.values + k * forecast_ensemble.values[:, j])
+
+        if different_folders is True:
+            skill_folder = family_folder + str("%.2f" % skill_values[i])
+            if os.path.exists(skill_folder) is False:
+                os.mkdir(skill_folder)
+            family_member.to_csv(path_or_buf=skill_folder + '/' + output_filename + '.csv')
+        else:
+            if os.path.exists(family_folder) is False:
+                os.mkdir(family_folder)
+            family_member.to_csv(path_or_buf=family_folder + '/' + output_filename + '_' +
+                                 str("%02d" % int(10*skill_values[i])) + '.csv')
+
+    return None
+
+
+def plot_ensemble_family(hist_file, forecast_path, var_names, destination):
+
+    """
+    This function plots the difference between observations and  forecast ensemble for different values of the skill,
+    with forecasts generated from a benchmark using the forecast family method.
+    NOTE: this function only supports skill of an ensemble forecast based on CRPSS (continuous rank probability
+    skill score)
+    :param hist_file: string, the path to observations
+    :param forecast_path: string, the path to the benchmark forecast
+    :param var_names: string vector length 2, the names of the forecast quantity, both in observations and forecast data
+    :param destination: string, destination folder of the figures
+    :return: the function saves the resulting figures in PNG format
+    """
+
+    # Read original forecast (which is also the zero-skill family member)
+    benchmark_forecast = pd.read_csv(forecast_path + str(0) + '.csv', index_col=0)
+    benchmark_forecast.index = pd.to_datetime(np.array(benchmark_forecast.index), format='%Y/%m/%d')
+    benchmark_stats = pd.DataFrame({'min': benchmark_forecast.min(axis=1),
+                                    'mean': benchmark_forecast.mean(axis=1),
+                                    'max': benchmark_forecast.max(axis=1)}, index=benchmark_forecast.index)
+
+    # Get first day of months
+    date_list = pd.date_range(start=benchmark_forecast.index[0], periods=8, freq='MS')
+    date_label = ['N', 'D', 'J', 'F', 'M', 'A', 'M', 'J']
+
+    # Read historical data
+    hist_all = pd.read_csv(hist_file, index_col=0)
+    hist_all.index = pd.to_datetime(np.array(hist_all.index), format='%d/%m/%Y')
+    # Get the historical data that corresponds to the forecast period
+    hist_data = pd.Series(hist_all.loc[benchmark_forecast.index][var_names[0]])
+    # For precipitation and evaporation: historical data needs to be turned into a cumulative sum
+    if var_names[0] == 'Rain' or var_names[0] == 'PET':
+        hist_data = hist_data.cumsum()
+
+    # Figures
+    for i in np.arange(0, 12, 2):
+
+        # Initialise figure
+        fig = plt.figure(figsize=(6.7, 5))
+        ax = fig.add_subplot(1, 1, 1)
+        handles = []
+
+        hb, = ax.plot(benchmark_forecast.index, benchmark_stats.loc[:, 'mean'], alpha=.2, color='black',
+                      label='Benchmark')
+        ax.fill_between(benchmark_forecast.index, benchmark_stats.loc[:, 'mean'], benchmark_stats.loc[:, 'max'],
+                        alpha=.2, color='black')
+        ax.fill_between(benchmark_forecast.index, benchmark_stats.loc[:, 'min'], benchmark_stats.loc[:, 'mean'],
+                        alpha=.2, color='black')
+
+        # Read current forecast
+        if i == 10:
+            modified_forecast = hist_data
+        else:
+            modified_forecast = pd.read_csv(forecast_path + str(i) + '.csv', index_col=0)
+            modified_forecast.index = pd.to_datetime(np.array(benchmark_forecast.index), format='%Y/%m/%d')
+
+        # Plot current forecast vs. observed data
+        if i != 10:
+            hf, = ax.plot(modified_forecast.index, modified_forecast.iloc[:, 0], c='red', linewidth=0.5,
+                          label='Forecast')
+            ax.plot(modified_forecast, c='red', linewidth=0.5)
+        h, = ax.plot(benchmark_forecast.index, hist_data, c='blue', label='Observations', linewidth=2)
+        handles.append(h)
+        handles.append(hb)
+        handles.append(hf)
+
+        # Wrap up
+        ax.set_xlabel('Date', size=14)
+        ax.xaxis.set_ticks(date_list)
+        ax.xaxis.set_ticklabels(date_label)
+        ax.tick_params(labelsize=14)
+        ax.set_xlim(benchmark_forecast.index[0], benchmark_forecast.index[-1])
+        ax.set_ylabel('Cumulative rainfall (mm)', size=14)
+        if i == 0:
+            ax.legend(handles=handles, loc=2, prop={'size': 16})
+        ax.set_title('(' + chr(ord('`')+int(float(i)/2.0+1)) + ') CRPSS=' + str(float(i) / 10), size=18)
+
+        # Figure save
+        if os.path.exists(destination + '/ensemble_family') is False:
+            os.mkdir(destination + '/ensemble_family')
+        fig.savefig(destination + '/ensemble_family/family_CRPSS=' + str(float(i) / 10) + '.png')
+        fig.clf()
+
+    return None
+
+
 def ecmwf_ensemble_family(history_file, forecast_folder, variable_names, family_folder, skill_values, begin_date,
                           end_date):
 
@@ -25,12 +139,12 @@ def ecmwf_ensemble_family(history_file, forecast_folder, variable_names, family_
         No output variable: output printed to file
     """
 
+    # List dates for forecasts to pull
+    date_list = pd.date_range(start=begin_date, end=end_date, freq='MS')
+
     # Read historical data
     hist_all = pd.read_csv(history_file, index_col=0)
     hist_all.index = pd.to_datetime(np.array(hist_all.index), format='%d/%m/%Y')
-
-    # List dates for forecasts to pull
-    date_list = pd.date_range(start=begin_date, end=end_date, freq='MS')
 
     # Loop on forecast dates
     for t in date_list:
@@ -47,24 +161,10 @@ def ecmwf_ensemble_family(history_file, forecast_folder, variable_names, family_
         if variable_names[0] == 'Rain' or variable_names[0] == 'PET':
             hist_data = hist_data.cumsum()
 
-        # Build forecast family
-        for i in range(len(skill_values)):
-
-            # Compute multiplier k
-            k = 1 - skill_values[i]
-
-            # Member of the forecast family for this skill level
-            family_member = pd.DataFrame(data=None, index=fore_data.index)
-            for j in range(fore_data.shape[1]):
-                family_member.insert(j, column=fore_data.columns[j],
-                                     value=(1 - k) * hist_data.values + k * fore_data.values[:, j])
-
-            skill_folder = family_folder + '/ECMWF_Ensemble_skill_CRPSS=' + str("%.2f" % skill_values[i])
-            if os.path.exists(skill_folder) is False:
-                os.mkdir(skill_folder)
-
-            family_member.to_csv(path_or_buf=skill_folder + '/' + str(10000*t.year + 100*t.month + t.day) +
-                                 '_1d_7m_ECMWF_' + variable_names[1] + '.csv')
+        # Generate forecast family after specifying outputs (True for different folders)
+        full_family_folder = family_folder + '/ECMWF_Ensemble_skill_CRPSS='
+        output_name = str(10000*t.year + 100*t.month + t.day) + '_1d_7m_ECMWF_' + variable_names[1]
+        generate_family(hist_data, fore_data, skill_values, full_family_folder, True, output_name)
 
     return None
 
