@@ -4,7 +4,8 @@ import os
 import matplotlib.pyplot as plt
 
 
-def ensemble_family(hist_file, forecast_folder, variable_names, family_folder, skill_values, begin_date, end_date):
+def ecmwf_ensemble_family(history_file, forecast_folder, variable_names, family_folder, skill_values, begin_date,
+                          end_date):
 
     """ This function creates families of new ensemble forecasts of desired skills from existing ensemble forecasts.
         It then saves the resulting forecast families in CSV files: 1 per forecast
@@ -13,7 +14,7 @@ def ensemble_family(hist_file, forecast_folder, variable_names, family_folder, s
 
         inputs = (hist_file, forecast_folder, variable_name, family_folder, skill_values, begin_date, end_date, mase)
 
-        hist_file           = Full path to file with historical data for which we have the forecasts
+        history_file        = Full path to file with historical data for which we have the forecasts
         forecast_folder     = Path to the folder where the forecasts are. Enter as string.
         variable_names      = String duplet with the name of the variable both in historical data and forecasts
         family_folder       = Folder where to save outputs. Enter as string.
@@ -25,7 +26,7 @@ def ensemble_family(hist_file, forecast_folder, variable_names, family_folder, s
     """
 
     # Read historical data
-    hist_all = pd.read_csv(hist_file, index_col=0)
+    hist_all = pd.read_csv(history_file, index_col=0)
     hist_all.index = pd.to_datetime(np.array(hist_all.index), format='%d/%m/%Y')
 
     # List dates for forecasts to pull

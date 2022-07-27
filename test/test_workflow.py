@@ -7,8 +7,8 @@ import sys
 sys.path.append('../')
 sys.path.append('.')
 
-from src.deterministic import deterministic_family
-from src.ensemble import ensemble_family
+from src.deterministic import ecmwf_deterministic_family
+from src.ensemble import ecmwf_ensemble_family
 
 """
 Test with pytest from main directory: enter in command line `pytest test/test/workflow.py`
@@ -61,16 +61,18 @@ def test_workflow():
     rain_fore_avg = pd.Series(data=rain_forecast.mean(axis=1), index=rain_forecast.index, name='Forecast Rain: average')
 
     # Create output files
-    deterministic_family(datafile, forecast_dir, ['Temp', 'Temp'], family_dir, skill_values, beg_end_date, beg_end_date,
-                         'MAE')
-    deterministic_family(datafile, forecast_dir, ['Rain', 'Rain'], family_dir, skill_values, beg_end_date, beg_end_date,
-                         'MAE')
-    deterministic_family(datafile, forecast_dir, ['Temp', 'Temp'], family_dir, skill_values_mse, beg_end_date,
-                         beg_end_date, 'MSE')
-    deterministic_family(datafile, forecast_dir, ['Rain', 'Rain'], family_dir, skill_values_mse, beg_end_date,
-                         beg_end_date, 'MSE')
-    ensemble_family(datafile, forecast_dir, ['Temp', 'Temp'], family_dir, skill_values, beg_end_date, beg_end_date)
-    ensemble_family(datafile, forecast_dir, ['Rain', 'Rain'], family_dir, skill_values, beg_end_date, beg_end_date)
+    ecmwf_deterministic_family(datafile, forecast_dir, ['Temp', 'Temp'], family_dir, skill_values, beg_end_date,
+                               beg_end_date, 'MAE')
+    ecmwf_deterministic_family(datafile, forecast_dir, ['Rain', 'Rain'], family_dir, skill_values, beg_end_date,
+                               beg_end_date, 'MAE')
+    ecmwf_deterministic_family(datafile, forecast_dir, ['Temp', 'Temp'], family_dir, skill_values_mse, beg_end_date,
+                               beg_end_date, 'MSE')
+    ecmwf_deterministic_family(datafile, forecast_dir, ['Rain', 'Rain'], family_dir, skill_values_mse, beg_end_date,
+                               beg_end_date, 'MSE')
+    ecmwf_ensemble_family(datafile, forecast_dir, ['Temp', 'Temp'], family_dir, skill_values, beg_end_date,
+                          beg_end_date)
+    ecmwf_ensemble_family(datafile, forecast_dir, ['Rain', 'Rain'], family_dir, skill_values, beg_end_date,
+                          beg_end_date)
 
     # Test MAE temp
     family_to_test = pd.read_csv(family_dir + '19690101_1d_7m_ECMWF_Temp_MAE_Family.csv', index_col=0)

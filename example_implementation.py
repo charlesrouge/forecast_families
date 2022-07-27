@@ -1,5 +1,5 @@
-from src.deterministic import deterministic_family
-from src.ensemble import ensemble_family, plot_ensemble
+from src.deterministic import ecmwf_deterministic_family
+from src.ensemble import ecmwf_ensemble_family, plot_ensemble
 import numpy as np
 import os
 
@@ -15,6 +15,7 @@ In the deterministic implementation, families are put in the same file instead, 
 identical to the ensemble implementation.
 """
 
+# main_dir = 'data/'
 main_dir = '../../iRONS/iRONS/Notebooks/B - Implementation/Inputs/'
 datafile = main_dir + 'hist_clim_data.csv'
 forecast_folder = main_dir + 'ECMWF forecasts csv/'
@@ -29,15 +30,15 @@ beg_date = '2011/09/1'
 end_date = '2012/08/01'
 
 # Ensembles (skill: CRPSS)
-ensemble_family(datafile, forecast_folder, var_name, family_destination, skill_values, beg_date, end_date)
+ecmwf_ensemble_family(datafile, forecast_folder, var_name, family_destination, skill_values, beg_date, end_date)
 
 # Example plotting for ensembles
 
 
 # MAE (deterministic)
-deterministic_family(datafile, forecast_folder, var_name, family_destination + '/deterministic/', skill_values,
-                     beg_date, end_date, 'MAE')
+ecmwf_deterministic_family(datafile, forecast_folder, var_name, family_destination + '/deterministic/', skill_values,
+                           beg_date, end_date, 'MAE')
 
 # MSE (deterministic)
-deterministic_family(datafile, forecast_folder, var_name, family_destination + '/deterministic/', skill_values,
-                     beg_date, end_date, 'MSE')
+ecmwf_deterministic_family(datafile, forecast_folder, var_name, family_destination + '/deterministic/', skill_values,
+                           beg_date, end_date, 'MSE')
