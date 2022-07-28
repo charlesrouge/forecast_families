@@ -32,7 +32,7 @@ def generate_family(observations, forecast_ensemble, skill_values, family_folder
     return None
 
 
-def plot_ensemble_family(hist_file, forecast_path, family_path, var_names, destination):
+def plot_family(hist_file, forecast_path, family_path, skill_specs, var_name, destination):
 
     """
     This function plots the difference between observations and  forecast ensemble for different values of the skill,
@@ -41,13 +41,13 @@ def plot_ensemble_family(hist_file, forecast_path, family_path, var_names, desti
     skill score)
     :param hist_file: string, the path to observations
     :param forecast_path: string, the path to the benchmark forecast
-    :param var_names: string vector length 2, the names of the forecast quantity, both in observations and forecast data
+    :param var_name: string vector length 2, the names of the forecast quantity, both in observations and forecast data
     :param destination: string, destination folder of the figures
     :return: the function saves the resulting figures in PNG format
     """
 
     # Read original forecast (which is also the zero-skill family member)
-    benchmark_forecast = pd.read_csv(forecast_path + '.csv', index_col=0)
+    benchmark_forecast = pd.read_csv(forecast_path, index_col=0)
     benchmark_forecast.index = pd.to_datetime(np.array(benchmark_forecast.index), format='%Y/%m/%d')
     benchmark_stats = pd.DataFrame({'min': benchmark_forecast.min(axis=1),
                                     'mean': benchmark_forecast.mean(axis=1),
@@ -61,13 +61,13 @@ def plot_ensemble_family(hist_file, forecast_path, family_path, var_names, desti
     hist_all = pd.read_csv(hist_file, index_col=0)
     hist_all.index = pd.to_datetime(np.array(hist_all.index), format='%d/%m/%Y')
     # Get the historical data that corresponds to the forecast period
-    hist_data = pd.Series(hist_all.loc[benchmark_forecast.index][var_names[0]])
+    hist_data = pd.Series(hist_all.loc[benchmark_forecast.index][var_name])
     # For precipitation and evaporation: historical data needs to be turned into a cumulative sum
-    if var_names[0] == 'Rain' or var_names[0] == 'PET':
+    if var_name == 'Rain' or var_name == 'PET':
         hist_data = hist_data.cumsum()
 
     # Figures
-    for i in np.arange(0, 12, 2):
+    for i in range(len(skill_specs.index)):
 
         # Initialise figure
         fig = plt.figure(figsize=(6.7, 5))
@@ -81,18 +81,15 @@ def plot_ensemble_family(hist_file, forecast_path, family_path, var_names, desti
         ax.fill_between(benchmark_forecast.index, benchmark_stats.loc[:, 'min'], benchmark_stats.loc[:, 'mean'],
                         alpha=.2, color='black')
 
-        # Read current forecast
-        if i == 10:
-            modified_forecast = hist_data
-        else:
-            modified_forecast = pd.read_csv(family_path + str(i) + '.csv', index_col=0)
-            modified_forecast.index = pd.to_datetime(np.array(benchmark_forecast.index), format='%Y/%m/%d')
+        # Read current forecast (family path with a part after and a part before the call to the skill specification)
+        modified_forecast = pd.read_csv(family_path[0] + str("%03d" % int(100*skill_specs.loc[i,'value'])) +
+                                        family_path[1] + '.csv', index_col=0)
+        modified_forecast.index = pd.to_datetime(np.array(modified_forecast.index), format='%Y/%m/%d')
 
         # Plot current forecast vs. observed data
-        if i != 10:
-            hf, = ax.plot(modified_forecast.index, modified_forecast.iloc[:, 0], c='red', linewidth=0.5,
+        hf, = ax.plot(modified_forecast.index, modified_forecast.iloc[:, 0], c='red', linewidth=0.5,
                           label='Forecast')
-            ax.plot(modified_forecast, c='red', linewidth=0.5)
+        ax.plot(modified_forecast, c='red', linewidth=0.5)
         h, = ax.plot(benchmark_forecast.index, hist_data, c='blue', label='Observations', linewidth=2)
         handles.append(h)
         handles.append(hb)
