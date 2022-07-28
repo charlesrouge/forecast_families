@@ -28,7 +28,7 @@ def generate_family(observations, fore_det, skill_values, skill_name):
     return family
 
 
-def plot_det_family(history_file, benchmark_path, var_names, skill_name, skill_specs, destination):
+def plot_family(history_file, benchmark_path, var_name, skill_name, skill_specs, destination, **kwargs):
 
     """
         This function plots the difference between observations and ensemble average (taken as deterministic forecasts)
@@ -39,7 +39,7 @@ def plot_det_family(history_file, benchmark_path, var_names, skill_name, skill_s
 
         :param history_file: string, the path to observations
         :param benchmark_path: string, the path to the benchmark forecast
-        :param var_names: string vector length 2, the names of the forecast quantity, both in observations and forecast data
+        :param var_name: string vector length 2, the names of the forecast quantity, both in observations and forecast data
         :param skill_name: string, the name of the metric upon which skill is based ('MAE' or 'MSE')
         :param skill_specs: Pandas DataFrame that contains the list of skills but also info to plot them
         :param destination: string, destination folder of the figures
@@ -51,14 +51,17 @@ def plot_det_family(history_file, benchmark_path, var_names, skill_name, skill_s
     benchmark_ensemble.index = pd.to_datetime(np.array(benchmark_ensemble.index), format='%Y/%m/%d')
     benchmark_forecast = pd.Series(benchmark_ensemble.mean(axis=1))
 
+    # Optional argument
+    display = kwargs.pop("display", False)
+
     # Read historical data
     hist_all = pd.read_csv(history_file, index_col=0)
     hist_all.index = pd.to_datetime(np.array(hist_all.index), format='%d/%m/%Y')
     # Get the historical data that corresponds to the forecast period
-    hist_data = pd.Series(hist_all.loc[benchmark_forecast.index][var_names[0]])
+    hist_data = pd.Series(hist_all.loc[benchmark_forecast.index][var_name])
 
     # For precipitation and evaporation: historical data needs to be turned into a cumulative sum
-    if var_names[0] == 'Rain' or var_names[0] == 'PET':
+    if var_name == 'Rain' or var_name == 'PET':
         hist_data = hist_data.cumsum()
 
     print(skill_specs['value'].values)
@@ -84,8 +87,7 @@ def plot_det_family(history_file, benchmark_path, var_names, skill_name, skill_s
     # X-axis labels
     date_list = pd.date_range(start=benchmark_forecast.index[0], periods=8, freq='MS')
     all_date_labels = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D', 'J', 'F', 'M', 'A', 'M', 'J', 'J']
-    date_label = all_date_labels[date_list[0].month - 1: date_list.month + 7]
-    print(date_label)
+    date_label = all_date_labels[int(date_list[0].month) - 1: int(date_list[0].month) + 7]
     ax.xaxis.set_ticks(date_list)
     ax.xaxis.set_ticklabels(date_label)
 
@@ -103,10 +105,13 @@ def plot_det_family(history_file, benchmark_path, var_names, skill_name, skill_s
     ax.legend(handles=handles, title='Forecasts by skill value', loc=4)
 
     # Figure save
-    if os.path.exists(destination + '/deterministic_family') is False:
-        os.mkdir(destination + '/deterministic_family')
-    fig.savefig(destination + '/deterministic_family/family_errors_' + skill_name + '.png')
-    fig.clf()
+    if os.path.exists(destination) is False:
+        os.mkdir(destination)
+    fig.savefig(destination + '/family_' + skill_name + '.png')
+
+    # Enable/disable display in Jupyter Notebook
+    if display is not True:
+        fig.clf()
 
     return None
 

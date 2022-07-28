@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import os
 import matplotlib.pyplot as plt
+from IPython.display import display
 
 
 def generate_family(observations, forecast_ensemble, skill_values, family_folder, different_folders, output_filename):
@@ -32,7 +33,7 @@ def generate_family(observations, forecast_ensemble, skill_values, family_folder
     return None
 
 
-def plot_family(hist_file, forecast_path, family_path, skill_specs, var_name, destination):
+def plot_family(hist_file, forecast_path, family_path, skill_specs, var_name, destination, **kwargs):
 
     """
     This function plots the difference between observations and  forecast ensemble for different values of the skill,
@@ -55,7 +56,11 @@ def plot_family(hist_file, forecast_path, family_path, skill_specs, var_name, de
 
     # Get first day of months
     date_list = pd.date_range(start=benchmark_forecast.index[0], periods=8, freq='MS')
-    date_label = ['N', 'D', 'J', 'F', 'M', 'A', 'M', 'J']
+    all_date_labels = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D', 'J', 'F', 'M', 'A', 'M', 'J', 'J']
+    date_label = all_date_labels[int(date_list[0].month) - 1: int(date_list[0].month) + 7]
+
+    # Optional argument
+    display = kwargs.pop("display", False)
 
     # Read historical data
     hist_all = pd.read_csv(hist_file, index_col=0)
@@ -104,13 +109,16 @@ def plot_family(hist_file, forecast_path, family_path, skill_specs, var_name, de
         ax.set_ylabel('Cumulative rainfall (mm)', size=14)
         if i == 0:
             ax.legend(handles=handles, loc=2, prop={'size': 16})
-        ax.set_title('(' + chr(ord('`')+int(float(i)/2.0+1)) + ') CRPSS=' + str(float(i) / 10), size=18)
+        ax.set_title('(' + chr(ord('`')+i+1) + ') CRPSS=' + str(skill_specs.loc[i,'value']), size=18)
 
         # Figure save
-        if os.path.exists(destination + '/ensemble_family') is False:
-            os.mkdir(destination + '/ensemble_family')
-        fig.savefig(destination + '/ensemble_family/family_CRPSS=' + str(float(i) / 10) + '.png')
-        fig.clf()
+        if os.path.exists(destination) is False:
+            os.mkdir(destination)
+        fig.savefig(destination + '/family_CRPSS=' + str(skill_specs.loc[i,'value']) + '.png')
+
+        # Enable/disable display in Jupyter Notebook
+        if display is not True:
+            fig.clf()
 
     return None
 
