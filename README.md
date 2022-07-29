@@ -1,14 +1,26 @@
-This is a draft implementation of the generation of forecast families. It is tailored to the forecast file format from 
-ECMWF, as presented in the iRONS toolbox by Andrés Peñuela and Francesca Pianosi (2020) at 
-https://github.com/AndresPenuela/iRONS
+This repository presents the source code, along with a Jupyter Notebook demo, for the "forecast families" methodology 
+presented in the paper by C. Rougé, A. Peñuela and F. Pianosi:
+"Forecast families: a new method to systematically evaluate the benefits of improving the skill of an existing forecast"
+submitted to the Journal of Water Resources Planning and Management.
 
-Files and sub-directories:
+Refer to the Jupyter Notebook `Forecast_families_demo.ipynb` to generate and visualize forecast families.
 
-=> `src` contains the code for generating forecast families, along with all the necessary information on input variables
+The library is built exclusively using Python code; a list of all the necessary libraries and their versions is 
+available in environment file `forecast_families.yml`. To create this environment on your end, you simply need to run:
+`conda env create --file forecast_families.yml`
+
+Sub-directories:
+
+=> `src` contains the code for generating forecast families.
 
 => `test` contains a test function for the forecast family generation workflow(s). Run with 
-`pytest test/test_worflow.py` from main directories
+`pytest test/test_worflow.py` from main directory.
 
-=> `draft` contains old files used for a draft implementation (not relevant any more, will clean up later)
+=> `data` contains the bias-corrected forecast ensemble displayed in Figure 3 of the paper, and uses that data to 
+demonstrate the method. As you run the Notebook, other data (taken from the iRONS toolbox available at  
+`https://github.com/iRONStoolbox/iRONStoolbox`, by Peñuela et al., 2021 at doi:10.1016/j.envsoft.2021.105188)) will
+ populate the folder.
 
-=> `example_implementation.py` contains basic code for the generation of forecast families.
+=> other directories are created when running the Notebook: 
+`example_results` when running Part 1 on the example data.
+`ECMWF_families` when running Part 2 on automated generation of forecast families from ECMWF hindcast.
