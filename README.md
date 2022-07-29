@@ -11,7 +11,8 @@ available in environment file `forecast_families.yml`. To create this environmen
 
 Sub-directories:
 
-=> `src` contains the code for generating forecast families.
+=> `src` contains the code for generating forecast families. Ensemble and deterministic families are generated with 
+`ensemble.py` and `deterministic.py`, respectively.
 
 => `test` contains a test function for the forecast family generation workflow(s). Run with 
 `pytest test/test_worflow.py` from main directory.

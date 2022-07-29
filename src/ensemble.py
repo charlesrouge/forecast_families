@@ -2,10 +2,21 @@ import pandas as pd
 import numpy as np
 import os
 import matplotlib.pyplot as plt
-from IPython.display import display
 
 
 def generate_family(observations, forecast_ensemble, skill_values, family_folder, different_folders, output_filename):
+
+    """
+    This function generates a forecast family given observations and a hindcast, for all the skill values specified.
+
+    :param observations: Pandas Series with the observations.
+    :param forecast_ensemble: Pandas DataFrame with the original (benchmark) hindcast ensemble.
+    :param skill_values: vector of floats with the values of the skill that family members should have.
+    :param family_folder: string indicating where to save outputs
+    :param different_folders: boolean, if True save outputs in different folders
+    :param output_filename: string, common part of file name for family members.
+    :return: Each ensemble in the forecast family is written to a separate CSV file.
+    """
 
     # Loop on skill values
     for i in range(len(skill_values)):
@@ -33,7 +44,7 @@ def generate_family(observations, forecast_ensemble, skill_values, family_folder
     return None
 
 
-def plot_family(hist_file, forecast_path, family_path, skill_specs, var_name, destination, **kwargs):
+def plot_family(hist_file, forecast_path, family_path, skill_values, var_name, destination, **kwargs):
 
     """
     This function plots the difference between observations and  forecast ensemble for different values of the skill,
@@ -42,10 +53,17 @@ def plot_family(hist_file, forecast_path, family_path, skill_specs, var_name, de
     skill score)
     :param hist_file: string, the path to observations
     :param forecast_path: string, the path to the benchmark forecast
-    :param var_name: string vector length 2, the names of the forecast quantity, both in observations and forecast data
+    :param family_path: string vector of length 2,
+           with the path name before and after reference to the value of the skill
+    :param skill_values: vector of floats with the different values of ensemble skill (based on CRPSS) to be trialled.
+    :param var_name: the name of the forecast quantity in observational data
     :param destination: string, destination folder of the figures
+    Optional argument: display the Figures directly in the Notebook when `display=True`
     :return: the function saves the resulting figures in PNG format
     """
+
+    # Optional argument
+    display = kwargs.pop("display", False)
 
     # Read original forecast (which is also the zero-skill family member)
     benchmark_forecast = pd.read_csv(forecast_path, index_col=0)
@@ -59,9 +77,6 @@ def plot_family(hist_file, forecast_path, family_path, skill_specs, var_name, de
     all_date_labels = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D', 'J', 'F', 'M', 'A', 'M', 'J', 'J']
     date_label = all_date_labels[int(date_list[0].month) - 1: int(date_list[0].month) + 7]
 
-    # Optional argument
-    display = kwargs.pop("display", False)
-
     # Read historical data
     hist_all = pd.read_csv(hist_file, index_col=0)
     hist_all.index = pd.to_datetime(np.array(hist_all.index), format='%d/%m/%Y')
@@ -72,7 +87,7 @@ def plot_family(hist_file, forecast_path, family_path, skill_specs, var_name, de
         hist_data = hist_data.cumsum()
 
     # Figures
-    for i in range(len(skill_specs.index)):
+    for i in range(len(skill_values)):
 
         # Initialise figure
         fig = plt.figure(figsize=(6.7, 5))
@@ -87,13 +102,13 @@ def plot_family(hist_file, forecast_path, family_path, skill_specs, var_name, de
                         alpha=.2, color='black')
 
         # Read current forecast (family path with a part after and a part before the call to the skill specification)
-        modified_forecast = pd.read_csv(family_path[0] + str("%03d" % int(100*skill_specs.loc[i,'value'])) +
+        modified_forecast = pd.read_csv(family_path[0] + str("%03d" % int(100 * skill_values[i])) +
                                         family_path[1] + '.csv', index_col=0)
         modified_forecast.index = pd.to_datetime(np.array(modified_forecast.index), format='%Y/%m/%d')
 
         # Plot current forecast vs. observed data
         hf, = ax.plot(modified_forecast.index, modified_forecast.iloc[:, 0], c='red', linewidth=0.5,
-                          label='Forecast')
+                      label='Forecast')
         ax.plot(modified_forecast, c='red', linewidth=0.5)
         h, = ax.plot(benchmark_forecast.index, hist_data, c='blue', label='Observations', linewidth=2)
         handles.append(h)
@@ -109,12 +124,12 @@ def plot_family(hist_file, forecast_path, family_path, skill_specs, var_name, de
         ax.set_ylabel('Cumulative rainfall (mm)', size=14)
         if i == 0:
             ax.legend(handles=handles, loc=2, prop={'size': 16})
-        ax.set_title('(' + chr(ord('`')+i+1) + ') CRPSS=' + str(skill_specs.loc[i,'value']), size=18)
+        ax.set_title('(' + chr(ord('`')+i+1) + ') CRPSS=' + str(skill_values[i]), size=18)
 
         # Figure save
         if os.path.exists(destination) is False:
             os.mkdir(destination)
-        fig.savefig(destination + '/family_CRPSS=' + str(skill_specs.loc[i,'value']) + '.png')
+        fig.savefig(destination + '/family_CRPSS=' + str(skill_values[i]) + '.png')
 
         # Enable/disable display in Jupyter Notebook
         if display is not True:
@@ -131,7 +146,7 @@ def ecmwf_ensemble_family(history_file, forecast_folder, variable_names, family_
 
         WARNING: this only works for monthly forecasts. For a different time interval between forecast, modify line XX
 
-        inputs = (hist_file, forecast_folder, variable_name, family_folder, skill_values, begin_date, end_date, mase)
+        inputs = (history_file, forecast_folder, variable_name, family_folder, skill_values, begin_date, end_date)
 
         history_file        = Full path to file with historical data for which we have the forecasts
         forecast_folder     = Path to the folder where the forecasts are. Enter as string.
@@ -170,18 +185,5 @@ def ecmwf_ensemble_family(history_file, forecast_folder, variable_names, family_
         full_family_folder = family_folder + '/ECMWF_Ensemble_skill_CRPSS='
         output_name = str(10000*t.year + 100*t.month + t.day) + '_1d_7m_ECMWF_' + variable_names[1]
         generate_family(hist_data, fore_data, skill_values, full_family_folder, True, output_name)
-
-    return None
-
-
-def plot_ensemble(hist_file, variable_names, family_folder, skill_values, date):
-
-    # Read historical data
-    hist_all = pd.read_csv(hist_file, index_col=0)
-    hist_all.index = pd.to_datetime(np.array(hist_all.index), format='%d/%m/%Y')
-
-    num_fig = len(skill_values)
-
-    fig,ax = plt.subplots(ncols=num_fig, nrows=1, figsize=(6*num_fig, 6))
 
     return None

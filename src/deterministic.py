@@ -7,6 +7,16 @@ import os
 
 def generate_family(observations, fore_det, skill_values, skill_name):
 
+    """
+    This function generates a forecast family given observations and a hindcast, for all the skill values specified.
+
+    :param observations: Pandas Series with the observations.
+    :param fore_det: Pandas Series with the deterministic hindcast.
+    :param skill_values: vector of floats with the values of the skill that family members should have.
+    :param skill_name: string, the name of the metric upon which skill is based ('MAE' or 'MSE').
+    :return: Pandas DataFrame where each column is a forecast family member.
+    """
+
     # Define forecast family
     family = pd.DataFrame(data=None, index=fore_det.index)
 
@@ -39,20 +49,22 @@ def plot_family(history_file, benchmark_path, var_name, skill_name, skill_specs,
 
         :param history_file: string, the path to observations
         :param benchmark_path: string, the path to the benchmark forecast
-        :param var_name: string vector length 2, the names of the forecast quantity, both in observations and forecast data
-        :param skill_name: string, the name of the metric upon which skill is based ('MAE' or 'MSE')
+        :param var_name: string vector length 2, the names of the forecast quantity, both in observations and forecast
+               data
+        :param skill_name: string, the name of the metric upon which skill is based ('MAE' or 'MSE').
         :param skill_specs: Pandas DataFrame that contains the list of skills but also info to plot them
         :param destination: string, destination folder of the figures
+        Optional argument: display the Figures directly in the Notebook when `display=True`
         :return: the function saves the resulting figure in PNG format
         """
+
+    # Optional argument
+    display = kwargs.pop("display", False)
 
     # Read original forecast (which is also the zero-skill family member)
     benchmark_ensemble = pd.read_csv(benchmark_path, index_col=0)
     benchmark_ensemble.index = pd.to_datetime(np.array(benchmark_ensemble.index), format='%Y/%m/%d')
     benchmark_forecast = pd.Series(benchmark_ensemble.mean(axis=1))
-
-    # Optional argument
-    display = kwargs.pop("display", False)
 
     # Read historical data
     hist_all = pd.read_csv(history_file, index_col=0)
@@ -63,8 +75,6 @@ def plot_family(history_file, benchmark_path, var_name, skill_name, skill_specs,
     # For precipitation and evaporation: historical data needs to be turned into a cumulative sum
     if var_name == 'Rain' or var_name == 'PET':
         hist_data = hist_data.cumsum()
-
-    print(skill_specs['value'].values)
 
     # Compute the forecast family
     family = generate_family(hist_data, benchmark_forecast, skill_specs.loc[:, 'value'], skill_name)
