@@ -1,7 +1,7 @@
 This repository presents the source code, along with a Jupyter Notebook demo, for the "forecast families" methodology 
 presented in the paper by C. Rougé, A. Peñuela and F. Pianosi:
 "Forecast families: a new method to systematically evaluate the benefits of improving the skill of an existing forecast"
-submitted to the Journal of Water Resources Planning and Management.
+published to the Journal of Water Resources Planning and Management at doi:10.1061/JWRMD5.WRENG-5934
 
 Refer to the Jupyter Notebook `Forecast_families_demo.ipynb` to generate and visualize forecast families.
 
